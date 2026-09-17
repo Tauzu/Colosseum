@@ -1,7 +1,9 @@
 'use strict';
 
 const { TICK_RATE, TICK_DELTA, SPAWN, BOT, BOSS, HELP_COOLDOWN_SEC } = require('../shared/constants');
-const Player = require('./entities/Player');
+const Player          = require('./entities/Player');
+const SpawnSystem     = require('./systems/SpawnSystem');
+const CollisionSystem = require('./systems/CollisionSystem');
 
 let _roomCounter = 0;
 
@@ -100,6 +102,17 @@ class GameRoom {
       player.update(TICK_DELTA);
     }
 
+    // 敵スポーン
+    SpawnSystem.update(this);
+
+    // 敵移動
+    for (const enemy of this.enemies.values()) {
+      enemy.update(TICK_DELTA, this.players);
+    }
+
+    // 当たり判定
+    CollisionSystem.update(this);
+
     // 状態送信
     this.io.to(this.id).emit('game_state', this._serialize());
   }
@@ -109,7 +122,7 @@ class GameRoom {
       t:          Date.now(),
       elapsedSec: Math.floor(this.elapsedSec),
       players:    [...this.players.values()].map(p => p.serialize()),
-      enemies:    [],
+      enemies:    [...this.enemies.values()].map(e => e.serialize()),
       bullets:    [],
     };
   }

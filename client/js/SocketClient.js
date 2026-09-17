@@ -21,6 +21,8 @@ const SocketClient = (() => {
     _socket.on('join_error',   d => _emit('join_error', d));
     _socket.on('boss_warning', d => _emit('boss_warning', d));
     _socket.on('boss_spawn',   d => _emit('boss_spawn', d));
+    _socket.on('enemy_die',    d => _emit('enemy_die', d));
+    _socket.on('damage_event', d => _emit('damage_event', d));
   }
 
   function on(event, fn) {

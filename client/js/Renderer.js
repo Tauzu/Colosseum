@@ -98,12 +98,21 @@ const Renderer = (() => {
     }
   }
 
+  const ENEMY_COLOR  = { basic: '#f33', fast: '#f80', ranged: '#a3f', boss: '#000' };
+  const ENEMY_RADIUS = { basic: 12, fast: 8, ranged: 14, boss: 40 };
+
   function _drawEnemies(ctx, enemies) {
     for (const e of enemies) {
+      const r = ENEMY_RADIUS[e.type] || 12;
       ctx.beginPath();
-      ctx.arc(e.x, e.y, 12, 0, Math.PI * 2);
-      ctx.fillStyle = '#f33';
+      ctx.arc(e.x, e.y, r, 0, Math.PI * 2);
+      ctx.fillStyle = ENEMY_COLOR[e.type] || '#f33';
       ctx.fill();
+      if (e.type === 'boss') {
+        ctx.strokeStyle = '#f33';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+      }
     }
   }
 
