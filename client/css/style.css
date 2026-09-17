@@ -1,0 +1,165 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  background: #111;
+  color: #eee;
+  font-family: monospace;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.hidden { display: none !important; }
+
+/* ホーム画面 */
+#screen-home {
+  text-align: center;
+  width: 480px;
+}
+
+#screen-home h1 {
+  font-size: 3rem;
+  letter-spacing: 0.3em;
+  margin-bottom: 2rem;
+  color: #f90;
+}
+
+.input-group { margin-bottom: 1rem; }
+
+#player-name {
+  background: #222;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  font-family: monospace;
+  width: 200px;
+  text-align: center;
+}
+
+.buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  margin-bottom: 2rem;
+}
+
+button {
+  background: #222;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+  font-family: monospace;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+button:hover { background: #333; }
+
+#room-list-container h2 {
+  font-size: 0.9rem;
+  color: #888;
+  margin-bottom: 0.5rem;
+  border-top: 1px solid #333;
+  padding-top: 1rem;
+}
+
+#room-list {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.room-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 0.8rem;
+  border: 1px solid #333;
+  margin-bottom: 0.4rem;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.room-item:hover { background: #1a1a1a; }
+
+.room-item.help {
+  border-color: #f33;
+  background: #1a0000;
+}
+
+.room-item.help .room-help-tag {
+  color: #f33;
+  font-weight: bold;
+  animation: blink 0.8s infinite;
+}
+
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.room-info { font-size: 0.85rem; color: #888; }
+
+/* ゲーム画面 */
+#screen-game {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+}
+
+#game-canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+#hud {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 0.5rem 1rem;
+  background: rgba(0,0,0,0.6);
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+#hud-center { font-size: 1.3rem; font-weight: bold; color: #f90; }
+
+#btn-help {
+  position: absolute;
+  bottom: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(200,0,0,0.7);
+  border-color: #f00;
+}
+
+#btn-help:disabled { opacity: 0.4; cursor: default; }
+
+#room-id-display {
+  position: absolute;
+  top: 3rem;
+  right: 1rem;
+  font-size: 0.75rem;
+  color: #555;
+  pointer-events: none;
+}
+
+/* リザルト画面 */
+#screen-result {
+  text-align: center;
+  line-height: 2;
+}
+
+#screen-result h2 { font-size: 2rem; margin-bottom: 1rem; }
+#result-title-badge { font-size: 1.2rem; color: #f90; }
+
+#screen-result .buttons,
+#screen-result button { margin-top: 1rem; }

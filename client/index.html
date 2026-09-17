@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Colosseum</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ホーム画面 -->
+  <div id="screen-home">
+    <h1>COLOSSEUM</h1>
+    <div class="input-group">
+      <input id="player-name" type="text" placeholder="プレイヤー名" maxlength="12">
+    </div>
+    <div class="buttons">
+      <button id="btn-create">① ルームを作る</button>
+      <button id="btn-join-prompt">② 助けに行く</button>
+    </div>
+    <div id="room-list-container">
+      <h2>アクティブルーム</h2>
+      <div id="room-list"></div>
+    </div>
+  </div>
+
+  <!-- ゲーム画面 -->
+  <div id="screen-game" class="hidden">
+    <canvas id="game-canvas"></canvas>
+    <div id="hud">
+      <div id="hud-left">
+        <div id="hud-hp">HP: <span id="hp-bar-text">100/100</span></div>
+        <div id="hud-score">Score: <span id="score-val">0</span></div>
+      </div>
+      <div id="hud-center">
+        <span id="hud-time">0:00</span>
+      </div>
+      <div id="hud-right">
+        <div>敵: <span id="hud-enemies">0</span></div>
+        <div>参加中: <span id="hud-players">0</span></div>
+      </div>
+    </div>
+    <button id="btn-help">[H] ヘルプ叫ぶ</button>
+    <div id="room-id-display"></div>
+  </div>
+
+  <!-- ゲームオーバー / クリア画面 -->
+  <div id="screen-result" class="hidden">
+    <h2 id="result-title"></h2>
+    <p>生存時間: <span id="result-time"></span></p>
+    <p>撃破数: <span id="result-kills"></span></p>
+    <p>スコア: <span id="result-score"></span></p>
+    <p id="result-title-badge"></p>
+    <button id="btn-retry">もう一度</button>
+    <button id="btn-home">ホームへ</button>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="js/SocketClient.js"></script>
+  <script src="js/InputManager.js"></script>
+  <script src="js/StateStore.js"></script>
+  <script src="js/Renderer.js"></script>
+  <script src="js/main.js"></script>
+</body>
+</html>
