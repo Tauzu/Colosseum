@@ -20,11 +20,11 @@ $('btn-create').addEventListener('click', () => {
   SocketClient.createRoom(name);
 });
 
-$('btn-join-prompt').addEventListener('click', () => {
-  const roomId = prompt('ルームIDを入力してください:');
+$('btn-join-direct').addEventListener('click', () => {
+  const roomId = $('join-room-id').value.trim().toUpperCase();
   if (!roomId) return;
   const name = $('player-name').value.trim() || 'Player';
-  SocketClient.joinRoom(roomId.trim().toUpperCase(), name);
+  SocketClient.joinRoom(roomId, name);
 });
 
 // ルーム一覧クリックで参加
@@ -69,14 +69,21 @@ SocketClient.on('connect', () => {
   StateStore.setMyId(SocketClient.id());
 });
 
-SocketClient.on('room_created', ({ roomId }) => {
+SocketClient.on('disconnect', () => {
+  InputManager.stopSending();
+});
+
+function _enterGame(roomId) {
   _currentRoomId = roomId;
   _score = _kills = 0;
   $('room-id-display').textContent = `Room: ${roomId}`;
   showScreen('game');
   InputManager.startSending();
   requestAnimationFrame(_loop);
-});
+}
+
+SocketClient.on('room_created', ({ roomId }) => _enterGame(roomId));
+SocketClient.on('room_joined',  ({ roomId }) => _enterGame(roomId));
 
 SocketClient.on('room_list', (list) => {
   const el = $('room-list');

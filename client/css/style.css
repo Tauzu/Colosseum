@@ -59,6 +59,23 @@ button {
 
 button:hover { background: #333; }
 
+.join-direct {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+}
+
+.join-direct input {
+  background: #222;
+  border: 1px solid #555;
+  color: #eee;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.9rem;
+  font-family: monospace;
+  flex: 1;
+  text-transform: uppercase;
+}
+
 #room-list-container h2 {
   font-size: 0.9rem;
   color: #888;

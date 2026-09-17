@@ -27,6 +27,7 @@ class RoomManager {
       return null;
     }
     room.addPlayer(socket, playerName, true);
+    socket.emit('room_joined', { roomId });
     this._broadcastRoomList();
     return room;
   }

@@ -16,10 +16,13 @@
     </div>
     <div class="buttons">
       <button id="btn-create">① ルームを作る</button>
-      <button id="btn-join-prompt">② 助けに行く</button>
     </div>
     <div id="room-list-container">
-      <h2>アクティブルーム</h2>
+      <h2>② 助けに行く（ルームを選択）</h2>
+      <div class="join-direct">
+        <input id="join-room-id" type="text" placeholder="Room ID を直接入力" maxlength="8">
+        <button id="btn-join-direct">参加</button>
+      </div>
       <div id="room-list"></div>
     </div>
   </div>

@@ -17,6 +17,7 @@ const SocketClient = (() => {
     _socket.on('help_activated', d => _emit('help_activated', d));
     _socket.on('room_end',     d => _emit('room_end', d));
     _socket.on('room_clear',   d => _emit('room_clear', d));
+    _socket.on('room_joined',  d => _emit('room_joined', d));
     _socket.on('join_error',   d => _emit('join_error', d));
     _socket.on('boss_warning', d => _emit('boss_warning', d));
     _socket.on('boss_spawn',   d => _emit('boss_spawn', d));
