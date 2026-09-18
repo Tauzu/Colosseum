@@ -6,6 +6,7 @@ let _currentRoomId = null;
 let _score         = 0;
 let _kills         = 0;
 let _helpCooldown  = 0;
+let _isDead        = false;   // 自分が死亡したか
 
 // --- 画面切替 ---
 function showScreen(name) {
@@ -27,7 +28,6 @@ $('btn-join-direct').addEventListener('click', () => {
   SocketClient.joinRoom(roomId, name);
 });
 
-// ルーム一覧クリックで参加
 $('room-list').addEventListener('click', e => {
   const item = e.target.closest('.room-item');
   if (!item) return;
@@ -43,12 +43,8 @@ $('btn-help').addEventListener('click', () => {
   startHelpCooldown();
 });
 
-$('btn-retry').addEventListener('click', () => {
-  showScreen('home');
-});
-$('btn-home').addEventListener('click', () => {
-  showScreen('home');
-});
+$('btn-retry').addEventListener('click', () => showScreen('home'));
+$('btn-home').addEventListener('click',  () => showScreen('home'));
 
 function startHelpCooldown() {
   _helpCooldown = 60;
@@ -64,18 +60,66 @@ function startHelpCooldown() {
   }, 1000);
 }
 
-// --- SocketClient イベント ---
-SocketClient.on('connect', () => {
-  StateStore.setMyId(SocketClient.id());
-});
+// --- 被弾フラッシュ ---
+let _flashTimer = 0;
+function _triggerDamageFlash() {
+  _flashTimer = 10;  // フレーム数
+}
+function _drawDamageFlash(ctx, W, H) {
+  if (_flashTimer <= 0) return;
+  _flashTimer--;
+  const alpha = _flashTimer / 10 * 0.35;
+  ctx.fillStyle = `rgba(255,0,0,${alpha})`;
+  ctx.fillRect(0, 0, W, H);
+}
 
-SocketClient.on('disconnect', () => {
-  InputManager.stopSending();
-});
+// --- 助っ人参加通知 ---
+let _joinNotice = null;
+function _showJoinNotice(name) {
+  _joinNotice = { text: `${name} が救援に来た！`, timer: 180 };
+}
+function _drawJoinNotice(ctx, W, H) {
+  if (!_joinNotice || _joinNotice.timer <= 0) { _joinNotice = null; return; }
+  _joinNotice.timer--;
+  const alpha = Math.min(_joinNotice.timer / 30, 1);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font        = 'bold 22px monospace';
+  ctx.textAlign   = 'center';
+  ctx.fillStyle   = '#ff0';
+  ctx.fillText(_joinNotice.text, W / 2, H / 2 - 60);
+  ctx.restore();
+}
+
+// Renderer に後付けでオーバーレイを描画
+const _origDraw = Renderer.draw.bind(Renderer);
+Renderer.draw = function() {
+  _origDraw();
+  const canvas = document.getElementById('game-canvas');
+  const ctx    = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  _drawDamageFlash(ctx, W, H);
+  _drawJoinNotice(ctx, W, H);
+  if (_isDead) _drawDeadOverlay(ctx, W, H);
+};
+
+function _drawDeadOverlay(ctx, W, H) {
+  ctx.fillStyle = 'rgba(0,0,0,0.4)';
+  ctx.fillRect(0, 0, W, H);
+  ctx.font      = 'bold 28px monospace';
+  ctx.textAlign = 'center';
+  ctx.fillStyle = '#f55';
+  ctx.fillText('YOU DIED — 観戦中', W / 2, 60);
+}
+
+// --- SocketClient イベント ---
+SocketClient.on('connect', () => StateStore.setMyId(SocketClient.id()));
+SocketClient.on('disconnect', () => InputManager.stopSending());
 
 function _enterGame(roomId) {
   _currentRoomId = roomId;
   _score = _kills = 0;
+  _isDead = false;
   $('room-id-display').textContent = `Room: ${roomId}`;
   showScreen('game');
   InputManager.startSending();
@@ -107,11 +151,33 @@ SocketClient.on('game_state', (state) => {
   _updateHUD(state);
 });
 
+SocketClient.on('damage_event', ({ targetId, remainHp }) => {
+  if (targetId === SocketClient.id()) _triggerDamageFlash();
+});
+
+SocketClient.on('player_die', ({ playerId }) => {
+  if (playerId === SocketClient.id()) {
+    _isDead = true;
+    InputManager.stopSending();
+    $('btn-help').style.display = 'none';
+  }
+});
+
+SocketClient.on('player_join', ({ name }) => {
+  _showJoinNotice(name);
+  // 画面フラッシュ（白）
+  _flashTimer = 0;
+  const canvas = document.getElementById('game-canvas');
+  const ctx    = canvas.getContext('2d');
+  ctx.fillStyle = 'rgba(255,255,255,0.4)';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+});
+
 SocketClient.on('room_end', ({ reason }) => {
   InputManager.stopSending();
-  $('result-title').textContent    = 'GAME OVER';
-  $('result-title').style.color    = '#f33';
   const state = StateStore.getState();
+  $('result-title').textContent = 'GAME OVER';
+  $('result-title').style.color = '#f33';
   $('result-time').textContent  = formatTime(state.elapsedSec);
   $('result-kills').textContent = _kills;
   $('result-score').textContent = _score.toLocaleString();
@@ -130,16 +196,19 @@ SocketClient.on('room_clear', ({ elapsedSec, kills, score, title }) => {
   showScreen('result');
 });
 
-SocketClient.on('join_error', ({ message }) => {
-  alert(message);
-});
+SocketClient.on('join_error', ({ message }) => alert(message));
 
 // --- HUD 更新 ---
 function _updateHUD(state) {
   const me = StateStore.getMe();
-  if (me) {
-    $('hp-bar-text').textContent = `${me.hp}/${me.maxHp}`;
+  if (me && !_isDead) {
+    const pct = me.hp / me.maxHp * 100;
+    $('hp-fill').style.width = `${Math.max(0, pct)}%`;
+    $('hp-fill').style.background = pct > 50 ? '#4a4' : pct > 25 ? '#fa0' : '#f33';
+    $('hp-text').textContent = `${Math.max(0, me.hp)}/${me.maxHp}`;
   }
+  _score = Math.floor(state.elapsedSec * 10) + _kills * 50;
+  $('score-val').textContent   = _score.toLocaleString();
   $('hud-time').textContent    = formatTime(state.elapsedSec);
   $('hud-enemies').textContent = state.enemies.length;
   $('hud-players').textContent = state.players.filter(p => !p.isDead).length;
@@ -148,11 +217,10 @@ function _updateHUD(state) {
 // --- ゲームループ ---
 function _loop() {
   Renderer.draw();
-  if (document.getElementById('screen-game').classList.contains('hidden')) return;
+  if ($('screen-game').classList.contains('hidden')) return;
   requestAnimationFrame(_loop);
 }
 
-// --- ユーティリティ ---
 function formatTime(sec) {
   const m = Math.floor(sec / 60);
   const s = sec % 60;
@@ -162,7 +230,7 @@ function formatTime(sec) {
 // --- 初期化 ---
 Renderer.init($('game-canvas'));
 InputManager.init(() => {
-  if (_helpCooldown <= 0) {
+  if (_helpCooldown <= 0 && !_isDead) {
     SocketClient.callHelp();
     startHelpCooldown();
   }

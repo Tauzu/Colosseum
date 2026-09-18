@@ -26,9 +26,13 @@ const Renderer = (() => {
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, W, H);
 
-    // カメラ: 自分中心
-    const camX = me ? me.x : MAP_W / 2;
-    const camY = me ? me.y : MAP_H / 2;
+    // カメラ: 自分中心 / 死亡時は生存プレイヤー追従
+    let camTarget = me;
+    if (!camTarget) {
+      camTarget = state.players.find(p => !p.isDead) || null;
+    }
+    const camX = camTarget ? camTarget.x : MAP_W / 2;
+    const camY = camTarget ? camTarget.y : MAP_H / 2;
     const offX = W / 2 - camX;
     const offY = H / 2 - camY;
 
