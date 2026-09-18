@@ -9,9 +9,10 @@ const PLAYER = {
   RADIUS:          16,
   SPEED:           200,
   HP:              100,
-  ATTACK_POWER:    20,
-  ATTACK_RANGE:    60,
-  ATTACK_COOLDOWN: 0.5,
+  ATTACK_POWER:      20,
+  ATTACK_RANGE:      150,           // コーン射程
+  ATTACK_HALF_ANGLE: Math.PI / 4,   // 45度（左右90度の扇形）
+  ATTACK_COOLDOWN:   0.5,
   INVINCIBLE_TIME: 0.5,
 };
 

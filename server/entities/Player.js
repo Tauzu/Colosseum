@@ -2,6 +2,12 @@
 
 const { PLAYER, HELPER_BONUS, MAP_WIDTH, MAP_HEIGHT } = require('../../shared/constants');
 
+function normalizeAngle(a) {
+  while (a >  Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
 let _nextId = 1;
 
 class Player {
@@ -24,6 +30,7 @@ class Player {
     this.attackPower = Math.floor(PLAYER.ATTACK_POWER * atkMult);
     this.attackRange = PLAYER.ATTACK_RANGE;
 
+    this.angle           = 0;        // 向いている方向（ラジアン）
     this.attackCooldown  = 0;
     this.invincibleTimer = 0;
 
@@ -31,7 +38,7 @@ class Player {
       ? calcScoreMultiplier(elapsedSecAtJoin)
       : 1.0;
 
-    this.input = { dx: 0, dy: 0, attacking: false };
+    this.input = { dx: 0, dy: 0, angle: 0 };
   }
 
   update(dt) {
@@ -48,20 +55,22 @@ class Player {
       this.pos.y = Math.max(this.radius, Math.min(MAP_HEIGHT - this.radius, this.pos.y + ny * this.speed * dt));
     }
 
+    this.angle = this.input.angle;
     if (this.attackCooldown  > 0) this.attackCooldown  -= dt;
     if (this.invincibleTimer > 0) this.invincibleTimer -= dt;
   }
 
   serialize() {
     return {
-      id:             this.id,
-      name:           this.name,
-      x:              Math.round(this.pos.x),
-      y:              Math.round(this.pos.y),
-      hp:             this.hp,
-      maxHp:          this.maxHp,
-      isDead:         this.isDead,
-      isBot:          this.isBot,
+      id:              this.id,
+      name:            this.name,
+      x:               Math.round(this.pos.x),
+      y:               Math.round(this.pos.y),
+      angle:           this.angle,
+      hp:              this.hp,
+      maxHp:           this.maxHp,
+      isDead:          this.isDead,
+      isBot:           this.isBot,
       scoreMultiplier: this.scoreMultiplier,
     };
   }

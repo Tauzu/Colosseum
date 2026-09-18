@@ -2,6 +2,7 @@
 
 const InputManager = (() => {
   const _keys = new Set();
+  let _mouseAngle = 0;
   let _sendInterval = null;
   let _helpCallback = null;
 
@@ -12,6 +13,12 @@ const InputManager = (() => {
       if (e.code === 'KeyH') _helpCallback && _helpCallback();
     });
     window.addEventListener('keyup', e => _keys.delete(e.code));
+    window.addEventListener('mousemove', e => {
+      // キャンバス中央（自プレイヤー位置）からの角度
+      const cx = window.innerWidth  / 2;
+      const cy = window.innerHeight / 2;
+      _mouseAngle = Math.atan2(e.clientY - cy, e.clientX - cx);
+    });
   }
 
   function startSending() {
@@ -33,11 +40,13 @@ const InputManager = (() => {
     const down  = _keys.has('KeyS') || _keys.has('ArrowDown')  ? 1 : 0;
     const up    = _keys.has('KeyW') || _keys.has('ArrowUp')    ? 1 : 0;
     return {
-      dx: right - left,
-      dy: down  - up,
-      attacking: _keys.has('Space'),
+      dx:    right - left,
+      dy:    down  - up,
+      angle: _mouseAngle,
     };
   }
 
-  return { init, startSending, stopSending, getInput };
+  function getMouseAngle() { return _mouseAngle; }
+
+  return { init, startSending, stopSending, getInput, getMouseAngle };
 })();

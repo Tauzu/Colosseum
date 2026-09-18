@@ -2,6 +2,21 @@
 
 const { PLAYER } = require('../../shared/constants');
 
+function _normalizeAngle(a) {
+  while (a >  Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function _inCone(player, enemy) {
+  const dx   = enemy.pos.x - player.pos.x;
+  const dy   = enemy.pos.y - player.pos.y;
+  const dist = Math.hypot(dx, dy);
+  if (dist > PLAYER.ATTACK_RANGE + enemy.radius) return false;
+  const angleToEnemy = Math.atan2(dy, dx);
+  return Math.abs(_normalizeAngle(angleToEnemy - player.angle)) <= PLAYER.ATTACK_HALF_ANGLE;
+}
+
 function update(room) {
   const players = room.players;
   const enemies = room.enemies;
@@ -15,10 +30,9 @@ function update(room) {
     let nearest = null, minDist = Infinity;
     for (const enemy of enemies.values()) {
       if (deadEnemies.has(enemy.id)) continue;
+      if (!_inCone(player, enemy)) continue;
       const dist = Math.hypot(enemy.pos.x - player.pos.x, enemy.pos.y - player.pos.y);
-      if (dist <= player.attackRange + enemy.radius && dist < minDist) {
-        minDist = dist; nearest = enemy;
-      }
+      if (dist < minDist) { minDist = dist; nearest = enemy; }
     }
 
     if (nearest) {

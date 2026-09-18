@@ -72,15 +72,20 @@ const Renderer = (() => {
       const isMe  = p.id === myId;
       const color = p.isBot ? '#4af' : (isMe ? '#44f' : '#4a4');
 
-      // 攻撃範囲（自分のみ、常時表示）
+      // 攻撃扇形（自分のみ、常時表示）
       if (isMe) {
+        const angle     = InputManager.getMouseAngle();
+        const halfAngle = Math.PI / 4;  // 45度
+        const range     = 150;
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 60 + 16, 0, Math.PI * 2);
-        ctx.strokeStyle = 'rgba(100,150,255,0.5)';
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(100,150,255,0.08)';
+        ctx.moveTo(p.x, p.y);
+        ctx.arc(p.x, p.y, range, angle - halfAngle, angle + halfAngle);
+        ctx.closePath();
+        ctx.fillStyle   = 'rgba(100,150,255,0.10)';
         ctx.fill();
+        ctx.strokeStyle = 'rgba(100,150,255,0.50)';
+        ctx.lineWidth   = 1.5;
+        ctx.stroke();
       }
 
       // 本体
