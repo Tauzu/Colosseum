@@ -42,13 +42,25 @@ class BotPlayer {
       return;
     }
 
-    const dx   = target.pos.x - this.pos.x;
-    const dy   = target.pos.y - this.pos.y;
-    const dist = Math.hypot(dx, dy);
+    const dx    = target.pos.x - this.pos.x;
+    const dy    = target.pos.y - this.pos.y;
+    const dist  = Math.hypot(dx, dy);
     const angle = Math.atan2(dy, dx);
+    this.angle  = angle;
 
-    this.angle = angle;
-    this.input = { dx: dx / dist, dy: dy / dist, angle };
+    const PREFERRED_DIST = this.attackRange - 10;  // 攻撃範囲の少し手前で停止
+    const HP_RATIO = this.hp / this.maxHp;
+
+    if (HP_RATIO < 0.3 && dist < PREFERRED_DIST + 40) {
+      // HP低下時は後退
+      this.input = { dx: -dx / dist, dy: -dy / dist, angle };
+    } else if (dist > PREFERRED_DIST) {
+      // 攻撃範囲外 → 近づく
+      this.input = { dx: dx / dist, dy: dy / dist, angle };
+    } else {
+      // 攻撃範囲内 → 停止して攻撃
+      this.input = { dx: 0, dy: 0, angle };
+    }
   }
 
   update(dt) {

@@ -155,6 +155,10 @@ SocketClient.on('damage_event', ({ targetId, remainHp }) => {
   if (targetId === SocketClient.id()) _triggerDamageFlash();
 });
 
+SocketClient.on('enemy_die', ({ killerId }) => {
+  if (killerId === SocketClient.id()) _kills++;
+});
+
 SocketClient.on('player_die', ({ playerId }) => {
   if (playerId === SocketClient.id()) {
     _isDead = true;
