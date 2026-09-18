@@ -187,6 +187,57 @@ button:hover { background: #333; }
   pointer-events: none;
 }
 
+/* ボスHP バー */
+#boss-hp-bar-container {
+  position: absolute;
+  top: 3.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(0,0,0,0.7);
+  padding: 0.3rem 0.8rem;
+  border: 1px solid #f33;
+  border-radius: 4px;
+  pointer-events: none;
+  animation: boss-bar-appear 0.5s ease;
+}
+
+@keyframes boss-bar-appear {
+  from { opacity: 0; transform: translateX(-50%) scale(0.8); }
+  to   { opacity: 1; transform: translateX(-50%) scale(1); }
+}
+
+#boss-hp-label {
+  color: #f33;
+  font-weight: bold;
+  font-size: 0.9rem;
+  letter-spacing: 0.1em;
+}
+
+#boss-hp-bar-bg {
+  width: 200px;
+  height: 12px;
+  background: #333;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+#boss-hp-fill {
+  height: 100%;
+  width: 100%;
+  background: #f33;
+  border-radius: 6px;
+  transition: width 0.15s;
+}
+
+#boss-hp-text {
+  font-size: 0.8rem;
+  color: #eee;
+  min-width: 70px;
+}
+
 /* リザルト画面 */
 #screen-result {
   text-align: center;

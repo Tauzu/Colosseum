@@ -1,9 +1,24 @@
 'use strict';
 
-const { TICK_DELTA, SPAWN, MAP_WIDTH, MAP_HEIGHT } = require('../../shared/constants');
+const { TICK_DELTA, SPAWN, BOSS, MAP_WIDTH, MAP_HEIGHT } = require('../../shared/constants');
 const Enemy = require('../entities/Enemy');
 
 function update(room) {
+  // ボス予告（出現30秒前）
+  if (!room.bossWarned && room.elapsedSec >= BOSS.SPAWN_SEC - BOSS.WARNING_SEC) {
+    room.bossWarned = true;
+    room.io.to(room.id).emit('boss_warning', { remainSec: BOSS.WARNING_SEC });
+  }
+
+  // ボス出現
+  if (!room.bossSpawned && room.elapsedSec >= BOSS.SPAWN_SEC) {
+    room.bossSpawned = true;
+    const boss = new Enemy('boss', MAP_WIDTH / 2, MAP_HEIGHT / 2);
+    room.bossId = boss.id;
+    room.enemies.set(boss.id, boss);
+    room.io.to(room.id).emit('boss_spawned', boss.serialize());
+  }
+
   const n  = Math.min(room.players.size, 4) || 1;
   const sf = _speedFactor(room, n);
   const interval = SPAWN.BASE_INTERVAL / (sf * (1 + SPAWN.GROWTH_RATE * room.elapsedSec));

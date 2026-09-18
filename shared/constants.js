@@ -37,8 +37,8 @@ const BOT = {
 };
 
 const BOSS = {
-  SPAWN_SEC:    480,  // 8分
-  WARNING_SEC:  30,
+  SPAWN_SEC:   process.env.BOSS_FAST ? 30 : 480,  // BOSS_FAST=1 でデバッグ短縮
+  WARNING_SEC: 30,
 };
 
 const HELP_COOLDOWN_SEC = 60;

@@ -1,6 +1,6 @@
 'use strict';
 
-const { TICK_RATE, TICK_DELTA, SPAWN, BOT, BOSS, HELP_COOLDOWN_SEC } = require('../shared/constants');
+const { TICK_RATE, TICK_DELTA, SPAWN, BOT, BOSS, HELP_COOLDOWN_SEC, SCORE } = require('../shared/constants');
 const Player          = require('./entities/Player');
 const BotPlayer       = require('./BotPlayer');
 const SpawnSystem     = require('./systems/SpawnSystem');
@@ -27,6 +27,7 @@ class GameRoom {
 
     this.helpCooldown    = 0;
     this.botJoinCountdown = null;
+    this.bossKillerId = null;
 
     this._tickInterval = setInterval(() => this._tick(), 1000 / TICK_RATE);
   }
@@ -115,6 +116,12 @@ class GameRoom {
     // 当たり判定
     CollisionSystem.update(this);
 
+    // ボス撃破 → クリア
+    if (this.bossId && !this.enemies.has(this.bossId)) {
+      this._clearRoom();
+      return;
+    }
+
     // 状態送信
     this.io.to(this.id).emit('game_state', this._serialize());
   }
@@ -149,6 +156,34 @@ class GameRoom {
       bonus:    null,
     });
     console.log(`[${this.id}] BOT参加: ${bot.name}`);
+  }
+
+  _clearRoom() {
+    this.state = 'clear';
+    clearInterval(this._tickInterval);
+
+    const elapsed = Math.floor(this.elapsedSec);
+    const title   = this._determineTitle();
+
+    for (const [socketId, player] of this.players) {
+      if (player.isBot) continue;
+      const kills = player.killCount;
+      const mult  = player.scoreMultiplier || 1;
+      const score = Math.floor(elapsed * SCORE.SURVIVAL_PER_SEC * mult)
+                  + kills * SCORE.KILL
+                  + SCORE.CLEAR_BONUS;
+      this.io.to(socketId).emit('room_clear', { elapsedSec: elapsed, kills, score, title });
+    }
+  }
+
+  _determineTitle() {
+    const realPlayers = [...this.players.values()].filter(p => !p.isBot);
+    if (realPlayers.length === 1 && !realPlayers[0].isHelper) return 'ソロクリア';
+
+    const bossKiller = this.players.get(this.bossKillerId);
+    if (bossKiller && bossKiller.isHelper) return '救世主';
+
+    return '生存者';
   }
 
   _endRoom(reason) {

@@ -73,6 +73,26 @@ function _drawDamageFlash(ctx, W, H) {
   ctx.fillRect(0, 0, W, H);
 }
 
+// --- ボス警告通知 ---
+let _bossNotice = null;
+function _showBossNotice(text, color) {
+  _bossNotice = { text, color: color || '#f33', timer: 300 };
+}
+function _drawBossNotice(ctx, W, H) {
+  if (!_bossNotice || _bossNotice.timer <= 0) { _bossNotice = null; return; }
+  _bossNotice.timer--;
+  const alpha = Math.min(_bossNotice.timer / 30, 1);
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.font        = 'bold 32px monospace';
+  ctx.textAlign   = 'center';
+  ctx.fillStyle   = _bossNotice.color;
+  ctx.shadowColor = _bossNotice.color;
+  ctx.shadowBlur  = 20;
+  ctx.fillText(_bossNotice.text, W / 2, H / 2 - 40);
+  ctx.restore();
+}
+
 // --- 助っ人参加通知 ---
 let _joinNotice = null;
 function _showJoinNotice(name) {
@@ -99,6 +119,7 @@ Renderer.draw = function() {
   const ctx    = canvas.getContext('2d');
   const W = canvas.width, H = canvas.height;
   _drawDamageFlash(ctx, W, H);
+  _drawBossNotice(ctx, W, H);
   _drawJoinNotice(ctx, W, H);
   if (_isDead) _drawDeadOverlay(ctx, W, H);
 };
@@ -120,7 +141,10 @@ function _enterGame(roomId) {
   _currentRoomId = roomId;
   _score = _kills = 0;
   _isDead = false;
+  _bossNotice = null;
   $('room-id-display').textContent = `Room: ${roomId}`;
+  $('boss-hp-bar-container').classList.add('hidden');
+  $('btn-help').style.display = '';
   showScreen('game');
   InputManager.startSending();
   requestAnimationFrame(_loop);
@@ -179,6 +203,7 @@ SocketClient.on('player_join', ({ name }) => {
 
 SocketClient.on('room_end', ({ reason }) => {
   InputManager.stopSending();
+  $('boss-hp-bar-container').classList.add('hidden');
   const state = StateStore.getState();
   $('result-title').textContent = 'GAME OVER';
   $('result-title').style.color = '#f33';
@@ -191,6 +216,7 @@ SocketClient.on('room_end', ({ reason }) => {
 
 SocketClient.on('room_clear', ({ elapsedSec, kills, score, title }) => {
   InputManager.stopSending();
+  $('boss-hp-bar-container').classList.add('hidden');
   $('result-title').textContent = 'CLEAR!!';
   $('result-title').style.color = '#4f4';
   $('result-time').textContent  = formatTime(elapsedSec);
@@ -198,6 +224,15 @@ SocketClient.on('room_clear', ({ elapsedSec, kills, score, title }) => {
   $('result-score').textContent = score.toLocaleString();
   $('result-title-badge').textContent = title ? `称号: ${title}` : '';
   showScreen('result');
+});
+
+SocketClient.on('boss_warning', () => {
+  _showBossNotice('⚠  ボス出現まで 30 秒！', '#f80');
+});
+
+SocketClient.on('boss_spawned', () => {
+  _showBossNotice('!! BOSS 出現 !!', '#f33');
+  $('boss-hp-bar-container').classList.remove('hidden');
 });
 
 SocketClient.on('join_error', ({ message }) => alert(message));
@@ -216,6 +251,15 @@ function _updateHUD(state) {
   $('hud-time').textContent    = formatTime(state.elapsedSec);
   $('hud-enemies').textContent = state.enemies.length;
   $('hud-players').textContent = state.players.filter(p => !p.isDead).length;
+
+  // ボスHP バー更新
+  const boss = state.enemies.find(e => e.type === 'boss');
+  if (boss) {
+    $('boss-hp-bar-container').classList.remove('hidden');
+    const pct = Math.max(0, boss.hp / boss.maxHp * 100);
+    $('boss-hp-fill').style.width = `${pct}%`;
+    $('boss-hp-text').textContent = `${boss.hp}/${boss.maxHp}`;
+  }
 }
 
 // --- ゲームループ ---

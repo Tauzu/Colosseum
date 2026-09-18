@@ -27,22 +27,18 @@ function update(room) {
     if (player.isDead) continue;
     if (player.attackCooldown > 0) continue;
 
-    let nearest = null, minDist = Infinity;
+    let hit = false;
     for (const enemy of enemies.values()) {
       if (deadEnemies.has(enemy.id)) continue;
       if (!_inCone(player, enemy)) continue;
-      const dist = Math.hypot(enemy.pos.x - player.pos.x, enemy.pos.y - player.pos.y);
-      if (dist < minDist) { minDist = dist; nearest = enemy; }
-    }
-
-    if (nearest) {
-      nearest.hp -= player.attackPower;
-      player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
-      if (nearest.hp <= 0) {
-        deadEnemies.add(nearest.id);
-        _killEnemy(room, nearest, player);
+      hit = true;
+      enemy.hp -= player.attackPower;
+      if (enemy.hp <= 0) {
+        deadEnemies.add(enemy.id);
+        _killEnemy(room, enemy, player);
       }
     }
+    if (hit) player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
   }
 
   // 敵 → プレイヤー（死亡済み敵はスキップ）
@@ -81,6 +77,7 @@ function _killPlayer(room, player) {
 function _killEnemy(room, enemy, killer) {
   room.enemies.delete(enemy.id);
   killer.killCount++;
+  if (enemy.type === 'boss') room.bossKillerId = killer.id;
   room.io.to(room.id).emit('enemy_die', { enemyId: enemy.id, killerId: killer.id });
 }
 
