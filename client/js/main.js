@@ -227,7 +227,7 @@ SocketClient.on('room_clear', ({ elapsedSec, kills, score, title }) => {
 });
 
 SocketClient.on('boss_warning', () => {
-  _showBossNotice('⚠  ボス出現まで 30 秒！', '#f80');
+  _showBossNotice('⚠  ボス出現まで 10 秒！', '#f80');
 });
 
 SocketClient.on('boss_spawned', () => {
