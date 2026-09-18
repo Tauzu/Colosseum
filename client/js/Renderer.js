@@ -41,6 +41,9 @@ const Renderer = (() => {
     _drawPlayers(ctx, state.players);
 
     ctx.restore();
+
+    // タッチ目標マーカー（スクリーン座標で描画）
+    _drawTouchMarker(ctx, me, offX, offY);
   }
 
   function _drawGrid(ctx, camX, camY, W, H) {
@@ -72,10 +75,10 @@ const Renderer = (() => {
       const isMe  = p.id === myId;
       const color = p.isBot ? '#4af' : (isMe ? '#44f' : '#4a4');
 
-      // 攻撃扇形（自分のみ、常時表示）
+      // 攻撃扇形（自分のみ・移動方向）
       if (isMe) {
-        const angle     = InputManager.getMouseAngle();
-        const halfAngle = Math.PI / 4;  // 45度
+        const angle     = p.angle !== undefined ? p.angle : InputManager.getLastAngle();
+        const halfAngle = Math.PI / 4;
         const range     = 150;
         ctx.beginPath();
         ctx.moveTo(p.x, p.y);
@@ -133,6 +136,22 @@ const Renderer = (() => {
         ctx.stroke();
       }
     }
+  }
+
+  function _drawTouchMarker(ctx, me, offX, offY) {
+    const target = InputManager.getTouchTarget();
+    if (!me || !target) return;
+    const sx = target.x + offX;
+    const sy = target.y + offY;
+    ctx.beginPath();
+    ctx.arc(sx, sy, 10, 0, Math.PI * 2);
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
+    ctx.lineWidth   = 1.5;
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.arc(sx, sy, 3, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(255,255,255,0.7)';
+    ctx.fill();
   }
 
   function _drawBullets(ctx, bullets) {
