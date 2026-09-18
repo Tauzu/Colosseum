@@ -167,11 +167,10 @@ class GameRoom {
 
     for (const [socketId, player] of this.players) {
       if (player.isBot) continue;
-      const kills = player.killCount;
-      const mult  = player.scoreMultiplier || 1;
-      const score = Math.floor(elapsed * SCORE.SURVIVAL_PER_SEC * mult)
-                  + kills * SCORE.KILL
-                  + SCORE.CLEAR_BONUS;
+      const kills     = player.killCount;
+      const mult      = player.scoreMultiplier || 1;
+      const baseScore = elapsed * SCORE.SURVIVAL_PER_SEC + kills * SCORE.KILL + SCORE.CLEAR_BONUS;
+      const score     = Math.floor(baseScore * mult);
       this.io.to(socketId).emit('room_clear', { elapsedSec: elapsed, kills, score, title });
     }
   }
@@ -183,7 +182,9 @@ class GameRoom {
     const bossKiller = this.players.get(this.bossKillerId);
     if (bossKiller && bossKiller.isHelper) return '救世主';
 
-    return '生存者';
+    if (this.elapsedSec >= 600) return '生存者';
+
+    return null;
   }
 
   _endRoom(reason) {
