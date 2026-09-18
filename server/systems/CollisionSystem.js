@@ -6,8 +6,31 @@ function update(room) {
   const players = room.players;
   const enemies = room.enemies;
 
-  // 敵 → プレイヤー
+  // プレイヤー攻撃 → 敵（先に処理して死亡敵をマーク）
+  const deadEnemies = new Set();
+  for (const player of players.values()) {
+    if (player.isDead || !player.input.attacking) continue;
+    if (player.attackCooldown > 0) continue;
+
+    for (const enemy of enemies.values()) {
+      if (deadEnemies.has(enemy.id)) continue;
+      const dist = Math.hypot(enemy.pos.x - player.pos.x, enemy.pos.y - player.pos.y);
+      if (dist <= player.attackRange + enemy.radius) {
+        enemy.hp -= player.attackPower;
+        player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
+
+        if (enemy.hp <= 0) {
+          deadEnemies.add(enemy.id);
+          _killEnemy(room, enemy, player);
+        }
+        break;
+      }
+    }
+  }
+
+  // 敵 → プレイヤー（死亡済み敵はスキップ）
   for (const enemy of enemies.values()) {
+    if (deadEnemies.has(enemy.id)) continue;
     if (enemy.attackCooldown > 0) continue;
     const target = players.get(enemy.targetId);
     if (!target || target.isDead || target.invincibleTimer > 0) continue;
@@ -25,25 +48,6 @@ function update(room) {
       });
 
       if (target.hp <= 0) _killPlayer(room, target);
-    }
-  }
-
-  // プレイヤー攻撃 → 敵
-  for (const player of players.values()) {
-    if (player.isDead || !player.input.attacking) continue;
-    if (player.attackCooldown > 0) continue;
-
-    for (const enemy of enemies.values()) {
-      const dist = Math.hypot(enemy.pos.x - player.pos.x, enemy.pos.y - player.pos.y);
-      if (dist <= player.attackRange + enemy.radius) {
-        enemy.hp -= player.attackPower;
-        player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
-
-        if (enemy.hp <= 0) {
-          _killEnemy(room, enemy, player);
-          break;
-        }
-      }
     }
   }
 }

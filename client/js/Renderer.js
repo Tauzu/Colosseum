@@ -64,10 +64,24 @@ const Renderer = (() => {
   }
 
   function _drawPlayers(ctx, players) {
-    const myId = StateStore.getMyId();
+    const myId  = StateStore.getMyId();
+    const input = InputManager.getInput();
+
     for (const p of players) {
       if (p.isDead) continue;
-      const color = p.isBot ? '#4af' : (p.id === myId ? '#44f' : '#4a4');
+      const isMe  = p.id === myId;
+      const color = p.isBot ? '#4af' : (isMe ? '#44f' : '#4a4');
+
+      // 攻撃範囲（自分のみ、スペース押下中）
+      if (isMe && input.attacking) {
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 60 + 16, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(100,150,255,0.5)';
+        ctx.lineWidth = 2;
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(100,150,255,0.08)';
+        ctx.fill();
+      }
 
       // 本体
       ctx.beginPath();
