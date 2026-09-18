@@ -48,11 +48,14 @@ const Renderer = (() => {
 
     // タッチ目標マーカー（スクリーン座標で描画）
     _drawTouchMarker(ctx, me, offX, offY);
+
+    // ボス方向インジケーター
+    _drawBossIndicator(ctx, state.enemies, W, H, offX, offY);
   }
 
   function _drawGrid(ctx, camX, camY, W, H) {
     const size = 64;
-    ctx.strokeStyle = '#1a1a1a';
+    ctx.strokeStyle = '#2a2a2a';
     ctx.lineWidth   = 1;
     const startX = Math.floor((camX - W / 2) / size) * size;
     const startY = Math.floor((camY - H / 2) / size) * size;
@@ -156,6 +159,53 @@ const Renderer = (() => {
     ctx.arc(sx, sy, 3, 0, Math.PI * 2);
     ctx.fillStyle = 'rgba(255,255,255,0.7)';
     ctx.fill();
+  }
+
+  function _drawBossIndicator(ctx, enemies, W, H, offX, offY) {
+    const boss = enemies.find(e => e.type === 'boss');
+    if (!boss) return;
+
+    // ボスのスクリーン座標
+    const sx = boss.x + offX;
+    const sy = boss.y + offY;
+
+    // 画面内なら表示不要
+    const margin = 50;
+    if (sx > margin && sx < W - margin && sy > margin && sy < H - margin) return;
+
+    const cx = W / 2, cy = H / 2;
+    const angle = Math.atan2(sy - cy, sx - cx);
+
+    // 画面端の交点を求める
+    const pad = 36;
+    const tan = Math.tan(angle);
+    let ex, ey;
+    if (Math.abs(Math.cos(angle)) > Math.abs(Math.sin(angle))) {
+      ex = sx < cx ? pad : W - pad;
+      ey = cy + (ex - cx) * tan;
+      ey = Math.max(pad, Math.min(H - pad, ey));
+    } else {
+      ey = sy < cy ? pad : H - pad;
+      ex = cx + (ey - cy) / tan;
+      ex = Math.max(pad, Math.min(W - pad, ex));
+    }
+
+    // 矢印描画
+    ctx.save();
+    ctx.translate(ex, ey);
+    ctx.rotate(angle);
+    ctx.beginPath();
+    ctx.moveTo(14, 0);
+    ctx.lineTo(-10, -8);
+    ctx.lineTo(-6, 0);
+    ctx.lineTo(-10, 8);
+    ctx.closePath();
+    ctx.fillStyle = '#f33';
+    ctx.shadowColor = '#f33';
+    ctx.shadowBlur = 8;
+    ctx.fill();
+    ctx.restore();
+
   }
 
   function _drawBullets(ctx, bullets) {
