@@ -2,6 +2,7 @@
 
 const { TICK_RATE, TICK_DELTA, SPAWN, BOT, BOSS, HELP_COOLDOWN_SEC } = require('../shared/constants');
 const Player          = require('./entities/Player');
+const BotPlayer       = require('./BotPlayer');
 const SpawnSystem     = require('./systems/SpawnSystem');
 const CollisionSystem = require('./systems/CollisionSystem');
 
@@ -99,6 +100,7 @@ class GameRoom {
 
     // プレイヤー更新
     for (const player of this.players.values()) {
+      if (player.isBot) player.think(this.enemies);
       player.update(TICK_DELTA);
     }
 
@@ -137,7 +139,16 @@ class GameRoom {
   }
 
   _addBot() {
-    // Phase 4 で実装
+    const bot = new BotPlayer(this.id);
+    this.players.set(bot.id, bot);
+    this.lastJoinTime = Date.now();
+    this.io.to(this.id).emit('player_join', {
+      playerId: bot.id,
+      name:     bot.name,
+      isBot:    true,
+      bonus:    null,
+    });
+    console.log(`[${this.id}] BOT参加: ${bot.name}`);
   }
 
   _endRoom(reason) {
