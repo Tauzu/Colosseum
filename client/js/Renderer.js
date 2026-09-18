@@ -72,8 +72,8 @@ const Renderer = (() => {
       const isMe  = p.id === myId;
       const color = p.isBot ? '#4af' : (isMe ? '#44f' : '#4a4');
 
-      // 攻撃範囲（自分のみ、スペース押下中）
-      if (isMe && input.attacking) {
+      // 攻撃範囲（自分のみ、常時表示）
+      if (isMe) {
         ctx.beginPath();
         ctx.arc(p.x, p.y, 60 + 16, 0, Math.PI * 2);
         ctx.strokeStyle = 'rgba(100,150,255,0.5)';

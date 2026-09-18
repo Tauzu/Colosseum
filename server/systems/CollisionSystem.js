@@ -6,24 +6,27 @@ function update(room) {
   const players = room.players;
   const enemies = room.enemies;
 
-  // プレイヤー攻撃 → 敵（先に処理して死亡敵をマーク）
+  // プレイヤー攻撃 → 敵（クールダウンが切れたら範囲内の最近接敵を自動攻撃）
   const deadEnemies = new Set();
   for (const player of players.values()) {
-    if (player.isDead || !player.input.attacking) continue;
+    if (player.isDead) continue;
     if (player.attackCooldown > 0) continue;
 
+    let nearest = null, minDist = Infinity;
     for (const enemy of enemies.values()) {
       if (deadEnemies.has(enemy.id)) continue;
       const dist = Math.hypot(enemy.pos.x - player.pos.x, enemy.pos.y - player.pos.y);
-      if (dist <= player.attackRange + enemy.radius) {
-        enemy.hp -= player.attackPower;
-        player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
+      if (dist <= player.attackRange + enemy.radius && dist < minDist) {
+        minDist = dist; nearest = enemy;
+      }
+    }
 
-        if (enemy.hp <= 0) {
-          deadEnemies.add(enemy.id);
-          _killEnemy(room, enemy, player);
-        }
-        break;
+    if (nearest) {
+      nearest.hp -= player.attackPower;
+      player.attackCooldown = PLAYER.ATTACK_COOLDOWN;
+      if (nearest.hp <= 0) {
+        deadEnemies.add(nearest.id);
+        _killEnemy(room, nearest, player);
       }
     }
   }
