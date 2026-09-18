@@ -19,7 +19,8 @@ function update(room) {
     room.io.to(room.id).emit('boss_spawned', boss.serialize());
   }
 
-  const n  = Math.min(room.players.size, 4) || 1;
+  const realCount = [...room.players.values()].filter(p => !p.isBot).length;
+  const n  = Math.min(realCount, 4) || 1;
   const sf = _speedFactor(room, n);
   const interval = SPAWN.BASE_INTERVAL / (sf * (1 + SPAWN.GROWTH_RATE * room.elapsedSec));
 
